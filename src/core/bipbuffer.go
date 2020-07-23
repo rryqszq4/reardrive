@@ -1,11 +1,8 @@
 package core
 
 import (
-	"bytes"
 	"fmt"
 )
-
-var b bytes.Buffer
 
 type bipbuf_t struct {
 
