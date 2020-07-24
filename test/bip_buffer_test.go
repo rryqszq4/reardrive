@@ -24,7 +24,17 @@ func ExampleBipBuffer()  {
 
 	fmt.Println(string(cb.Poll(20)))
 
+	fmt.Println(string(cb.Peek(10)))
+
 	cb.Offer([]byte("1234567890"))
+
+	cb.Print()
+
+	fmt.Println(string(cb.Poll(12)))
+
+	cb.Print()
+
+	fmt.Println(string(cb.Poll(12)))
 
 	cb.Print()
 

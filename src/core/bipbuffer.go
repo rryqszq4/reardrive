@@ -33,11 +33,11 @@ func (self *bipbuf_t) push() {
 
 }
 
-func (self *bipbuf_t) used() uint32 {
+func (self *bipbuf_t) Used() uint32 {
 	return (self.a_end - self.a_start) + self.b_end
 }
 
-func (self *bipbuf_t) unused() uint32 {
+func (self *bipbuf_t) Unused() uint32 {
 	if self.b_inuse {
 		return self.a_start - self.b_end
 	}else {
@@ -93,20 +93,20 @@ Offer
 func (self *bipbuf_t) Offer(data []byte) uint32{
 	var size = uint32(len(data))
 
-	if self.unused() < size {
+	if self.Unused() < size {
 		return 0
 	}
 
 	if self.b_inuse {
 		self.data = append(
 				append(self.data[0:self.b_end], data...),
-				self.data[size:]...
+				self.data[self.b_end+size:]...
 			)
 		self.b_end += uint32(size)
 	}else {
 		self.data = append(
 				append(self.data[0:self.a_end], data...),
-				self.data[size:]...
+				self.data[self.a_end+size:]...
 			)
 		self.a_end += uint32(size)
 	}
@@ -191,5 +191,5 @@ Print
 ====================
  */
 func (self *bipbuf_t) Print() {
-	fmt.Println(string(self.data), self.size, self.a_start, self.a_end, self.b_end, self.b_inuse)
+	fmt.Println(string(self.data),len(self.data), self.size, self.a_start, self.a_end, self.b_end, self.b_inuse)
 }
