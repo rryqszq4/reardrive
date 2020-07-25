@@ -1,22 +1,24 @@
 package main
 
 import (
+	"../src/core"
 	"log"
 	"os"
 	"strconv"
 	"testing"
-	"../src/core"
 )
 
-/*
-func ExampleLogger1() {
+/*func ExampleLogger1() {
 
 	log := core.NewLogFile("../logs/error.log")
 
-	//fmt.Println(123)
+	fmt.Println(123)
 
-	for i := 0; i < 10000000; i++ {
-		log.Write("Test logging, but use a somewhat realistic message length.Test logging, but use a somewhat realistic message length." + strconv.Itoa(i))
+	for i := 0; i < 1000000; i++ {
+		a := []byte("Test logging, but use a somewhat realistic message length.Test logging, but use a somewhat realistic message length.")
+		a = append(a, strconv.Itoa(i)...)
+		a = append(a, '\n')
+		log.Write(a)
 		//fmt.Println("iiiiiiiiiii=>"+strconv.Itoa(i))
 	}
 
@@ -25,8 +27,8 @@ func ExampleLogger1() {
 	// test
 
 	time.Sleep(time.Second*5)
-}
-*/
+}*/
+
 
 func BenchmarkLogger1(b *testing.B) {
 	log := core.NewLogFile("../logs/error.log")

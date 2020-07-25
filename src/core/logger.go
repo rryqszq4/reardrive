@@ -137,22 +137,22 @@ func NewLogFile(filename string) *logfile_t{
 
 	self.fwait.Add(1)
 
-	//timer := time.NewTicker(time.Millisecond * 100)
+	timer := time.NewTicker(time.Millisecond * 100)
 
 	self.thread_watcher = func() {
 		for {
 			select {
 			case <-self.fsync:
-				self.rwm.RLock()
+				self.rwm.Lock()
 				self.flush()
-				self.rwm.RUnlock()
+				self.rwm.Unlock()
 				self.fwait.Done()
 				//fmt.Println("==========sync==========")
-			/*case <-timer.C:
-				self.rwm.RLock()
+			case <-timer.C:
+				self.rwm.Lock()
 				self.flush()
-				self.rwm.RUnlock()
-				//fmt.Println("==========async=========")*/
+				self.rwm.Unlock()
+				//fmt.Println("==========async=========")
 			}
 		}
 	}
@@ -207,7 +207,7 @@ func (self *logfile_t) flush() error {
 	defer file.Close()
 
 	//fmt.Println("use=>" + strconv.Itoa(int(self.buf.Used())))
-	_, err = file.WriteString(string(self.buf.Poll(self.buf.Used())))
+	_, err = file.Write(self.buf.Poll(self.buf.Used()))
 
 	if err != nil {
 		panic(err)
