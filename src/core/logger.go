@@ -75,6 +75,10 @@ func NewLogger(filename string, level int) *logger_t {
 	return self
 }
 
+func (self *logger_t) Close() {
+	self.logfile.Close()
+}
+
 func (self *logger_t) record(levelStr []byte, s string) {
 	var buf []byte
 	buf = time.Now().AppendFormat(buf,"2006-01-02 15:04:05.000000")
@@ -129,7 +133,7 @@ func (self *logger_t) Error(v ...interface{}) {
 func NewLogFile(filename string) *logfile_t{
 	self := &logfile_t{
 		filename : filename,
-		flag : os.O_WRONLY | os.O_CREATE | os.O_APPEND,
+		flag : os.O_CREATE | os.O_WRONLY | os.O_APPEND,
 		mode : 0666,
 		buf : NewBipBuffer(LOG_BUFFER_SIZE),
 		fsync: make(chan bool),
@@ -143,9 +147,9 @@ func NewLogFile(filename string) *logfile_t{
 		for {
 			select {
 			case <-self.fsync:
-				self.rwm.Lock()
-				self.flush()
-				self.rwm.Unlock()
+				//self.rwm.Lock()
+				//self.flush()
+				//self.rwm.Unlock()
 				self.fwait.Done()
 				//fmt.Println("==========sync==========")
 			case <-timer.C:
@@ -162,26 +166,52 @@ func NewLogFile(filename string) *logfile_t{
 	return self
 }
 
+func (self *logfile_t) Close() {
+	self.flush()
+}
+
 func (self *logfile_t) Write(message []byte) error {
 	//message = time.Now().Format("2006-01-02 15:04:05.0000000")+" [INFO] "+message+"\n"
 
-	self.mutex.Lock()
+	//self.mutex.Lock()
 
 	//fmt.Println(self.buf.Unused())
 
-	if self.buf.Unused() < uint32(len(message)) {
-		self.fsync <- true
-		self.fwait.Wait()
-		self.fwait.Add(1)
+	self.rwm.Lock()
+	unused := self.buf.Unused()
+
+	//fmt.Println(unused)
+	if unused < uint32(len(message)) {
+
+		self.buf.Offer(message[0:unused])
+
+		//self.buf.Print()
+
+		var tmp uint32
+		for  {
+			//self.waitSyncOnce()
+
+			self.flushHalf()
+
+			tmp = self.buf.Offer(message[unused:])
+
+			if tmp > 0 {
+				break
+			}
+		}
+		//self.buf.Print()
+	}else {
+
+		if self.buf.Offer(message) <= 0 {
+			fmt.Println("write failed")
+		}
+
+		//self.buf.Print()
 	}
 
-	self.rwm.Lock()
-	if self.buf.Offer(message) <= 0 {
-		fmt.Println("write failed")
-	}
 	self.rwm.Unlock()
 
-	self.mutex.Unlock()
+	//self.mutex.Unlock()
 
 	return nil
 }
@@ -198,6 +228,32 @@ func (self *logfile_t) openFile() (*os.File, error) {
 
 }
 
+func (self *logfile_t) waitSyncOnce() {
+	self.fsync <- true
+	self.fwait.Wait()
+	self.fwait.Add(1)
+}
+
+func (self *logfile_t) flushHalf() error {
+
+	file, err := self.openFile()
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	//fmt.Printf("Unused=>%d, %d\n",self.buf.Unused(), self.buf.Used())
+	if self.buf.Used() == LOG_BUFFER_SIZE  {
+		_, err = file.Write(self.buf.Poll(LOG_BUFFER_SIZE/2))
+	}
+
+	if err != nil {
+		panic(err)
+	}
+
+	return nil
+}
+
 func (self *logfile_t) flush() error {
 
 	file, err := self.openFile()
@@ -206,7 +262,7 @@ func (self *logfile_t) flush() error {
 	}
 	defer file.Close()
 
-	//fmt.Println("use=>" + strconv.Itoa(int(self.buf.Used())))
+	//fmt.Printf("Unused=>%d, %d\n",self.buf.Unused(), self.buf.Used())
 	_, err = file.Write(self.buf.Poll(self.buf.Used()))
 
 	if err != nil {

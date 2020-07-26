@@ -32,6 +32,7 @@ import (
 
 func BenchmarkLogger1(b *testing.B) {
 	log := core.NewLogFile("../logs/error.log")
+	log.Close()
 
 	for i := 0; i < b.N; i++ {
 		fakeMessage := []byte("Test logging, but use a somewhat realistic message length.Test logging, but use a somewhat realistic message length")
@@ -41,6 +42,8 @@ func BenchmarkLogger1(b *testing.B) {
 		log.Write(fakeMessage)
 
 	}
+
+	log.Close()
 }
 
 func BenchmarkLogger2(b *testing.B) {
@@ -51,6 +54,8 @@ func BenchmarkLogger2(b *testing.B) {
 	for i :=0; i < b.N; i++ {
 		log.Info(fakeMessage + strconv.Itoa(i))
 	}
+
+	log.Close()
 }
 
 func BenchmarkStdLogger1(b *testing.B) {
