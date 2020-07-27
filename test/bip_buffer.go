@@ -22,13 +22,15 @@ func main()  {
 	log := core.NewLogFile("./logs/error.log")
 
 	go func() {
-		for i := 0; i < 100000; i++ {
+		for i := 0; i < 1000000; i++ {
 			a := []byte("Test logging, but use a somewhat realistic message length.Test logging, but use a somewhat realistic message length.")
 			a = append(a, strconv.Itoa(i)...)
 			a = append(a, '\n')
 			log.Write(a)
 			//time.Sleep(time.Second)
 		}
+
+		time.Sleep(time.Second*5)
 		for {
 			select {
 			case <- timer1.C:
@@ -46,13 +48,15 @@ func main()  {
 	}()
 
 	go func() {
-		for i := 0; i < 100000; i++ {
+		for i := 0; i < 1000000; i++ {
 			a := []byte("Test logging, but use a somewhat realistic message length.Test logging, but use a somewhat realistic message length.")
 			a = append(a, strconv.Itoa(i)...)
 			a = append(a, '\n')
 			log.Write(a)
 			//time.Sleep(time.Second)
 		}
+
+		time.Sleep(time.Second*5)
 		for {
 			select {
 			case <- timer2.C:

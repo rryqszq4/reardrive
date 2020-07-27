@@ -2,6 +2,7 @@ package main
 
 import (
 	"../src/core"
+	"github.com/kinone/sakura/mlog"
 	"log"
 	"os"
 	"strconv"
@@ -67,5 +68,19 @@ func BenchmarkStdLogger1(b *testing.B) {
 
 	for i:=0; i < b.N; i++ {
 		log.Println(fakeMessage + strconv.Itoa(i))
+	}
+}
+
+func BenchmarkMlog1(b *testing.B) {
+	var logger mlog.LevelLogger
+	logger = mlog.NewLogger(&mlog.Option{
+		File : "../logs/error.log",
+		Levels: []string{"info+"},
+	})
+
+	fakeMessage := "Test logging, but use a somewhat realistic message length.Test logging, but use a somewhat realistic message length."
+
+	for i:=0; i < b.N; i++ {
+		logger.Info(fakeMessage + strconv.Itoa(i))
 	}
 }

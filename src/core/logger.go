@@ -61,7 +61,7 @@ var (
 	}
 )
 
-const LOG_BUFFER_SIZE = 1024 * 16
+const LOG_BUFFER_SIZE = 1024 * 32
 const LOG_DELIMITER = ' '
 const LOG_END = '\n'
 
@@ -141,7 +141,7 @@ func NewLogFile(filename string) *logfile_t{
 
 	self.fwait.Add(1)
 
-	timer := time.NewTicker(time.Millisecond * 100)
+	timer := time.NewTicker(time.Second * 3)
 
 	self.thread_watcher = func() {
 		for {
@@ -180,12 +180,9 @@ func (self *logfile_t) Write(message []byte) error {
 	self.rwm.Lock()
 	unused := self.buf.Unused()
 
-	//fmt.Println(unused)
 	if unused < uint32(len(message)) {
 
 		self.buf.Offer(message[0:unused])
-
-		//self.buf.Print()
 
 		var tmp uint32
 		for  {
@@ -199,15 +196,15 @@ func (self *logfile_t) Write(message []byte) error {
 				break
 			}
 		}
-		//self.buf.Print()
+
 	}else {
 
 		if self.buf.Offer(message) <= 0 {
 			fmt.Println("write failed")
 		}
 
-		//self.buf.Print()
 	}
+	//self.buf.Print()
 
 	self.rwm.Unlock()
 
@@ -263,7 +260,13 @@ func (self *logfile_t) flush() error {
 	defer file.Close()
 
 	//fmt.Printf("Unused=>%d, %d\n",self.buf.Unused(), self.buf.Used())
-	_, err = file.Write(self.buf.Poll(self.buf.Used()))
+
+	polled := self.buf.Poll(self.buf.Used())
+	if polled == nil {
+		_, err = file.Write(self.buf.Poll(LOG_BUFFER_SIZE/2))
+	}else {
+		_, err = file.Write(polled)
+	}
 
 	if err != nil {
 		panic(err)

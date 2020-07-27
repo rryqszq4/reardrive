@@ -191,6 +191,7 @@ Print
 ====================
  */
 func (self *bipbuf_t) Print() {
-	fmt.Printf("data:[%s %s],len:%d,size:%d,a_start:%d,a_end:%d,b_end:%d,b_inuse:%v\n",
-		string(self.data[0:0]),string(self.data[0:0]),len(self.data), self.size, self.a_start, self.a_end, self.b_end, self.b_inuse)
+	fmt.Printf("data:[%s %s],len:%d,size:%d,a_start:%d,a_end:%d,b_end:%d,b_inuse:%v,Used:%d,Unused:%d\n",
+		string(self.data[0:0]),string(self.data[0:0]),len(self.data), self.size, self.a_start, self.a_end, self.b_end, self.b_inuse,
+		self.Used(), self.Unused())
 }
