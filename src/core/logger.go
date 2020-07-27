@@ -101,32 +101,62 @@ func (self *logger_t) record(levelStr []byte, s string) {
 }
 
 func (self *logger_t) Trace(v ...interface{}) {
-	if self.level & TRACE >0 {
+	if self.level & TRACE > 0 {
 		self.record(levelStrings[TRACE],fmt.Sprint(v...))
 	}
 }
 
+func (self *logger_t) Tracef(format string, v ...interface{}) {
+	if self.level & TRACE > 0 {
+		self.record(levelStrings[TRACE], fmt.Sprintf(format, v...))
+	}
+}
+
 func (self *logger_t) Debug(v ...interface{}) {
-	if self.level & DEBUG >0 {
+	if self.level & DEBUG > 0 {
 		self.record(levelStrings[DEBUG],fmt.Sprint(v...))
 	}
 }
 
+func (self *logger_t) Debugf(format string, v ...interface{}) {
+	if self.level & DEBUG > 0 {
+		self.record(levelStrings[DEBUG], fmt.Sprintf(format, v...))
+	}
+}
+
 func (self *logger_t) Info(v ...interface{}) {
-	if self.level & INFO >0 {
+	if self.level & INFO > 0 {
 		self.record(levelStrings[INFO],fmt.Sprint(v...))
 	}
 }
 
+func (self *logger_t) Infof(format string, v ...interface{}) {
+	if self.level & INFO > 0 {
+		self.record(levelStrings[INFO], fmt.Sprintf(format, v...))
+	}
+}
+
 func (self *logger_t) Warn(v ...interface{}) {
-	if self.level & WARN >0 {
+	if self.level & WARN > 0 {
 		self.record(levelStrings[WARN],fmt.Sprint(v...))
 	}
 }
 
+func (self *logger_t) Warnf(format string, v ...interface{}) {
+	if self.level & WARN > 0 {
+		self.record(levelStrings[WARN], fmt.Sprintf(format, v...))
+	}
+}
+
 func (self *logger_t) Error(v ...interface{}) {
-	if self.level & ERROR >0 {
+	if self.level & ERROR > 0 {
 		self.record(levelStrings[ERROR],fmt.Sprint(v...))
+	}
+}
+
+func (self *logger_t) Errorf(format string, v ...interface{}) {
+	if self.level & ERROR > 0 {
+		self.record(levelStrings[ERROR], fmt.Sprintf(format, v...))
 	}
 }
 

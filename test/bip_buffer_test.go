@@ -1,7 +1,7 @@
 package main
 
 import (
-	"../src/core"
+	"reardrive/src/core"
 	"fmt"
 )
 

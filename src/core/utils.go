@@ -12,3 +12,29 @@ func ArrayStringRevers(arr []string) []string{
 func Typeof(v interface{}) string {
 	return reflect.TypeOf(v).String()
 }
+
+func SliceInterface(s interface{}) (r []interface{}) {
+	rs := reflect.ValueOf(s)
+	kind := rs.Kind()
+	if kind != reflect.Slice && kind != reflect.Array {
+		panic(&reflect.ValueError{Method: "utils.SliceInterface", Kind: kind})
+	}
+
+	for i := 0; i < rs.Len(); i++ {
+		r = append(r, rs.Index(i).Interface())
+	}
+
+	return
+}
+
+func ArrayIndex(niddle, s interface{}) int {
+	slice := SliceInterface(s)
+
+	for k, v := range slice {
+		if reflect.DeepEqual(niddle, v) {
+			return k
+		}
+	}
+
+	return -1
+}

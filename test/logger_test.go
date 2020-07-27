@@ -1,7 +1,7 @@
 package main
 
 import (
-	"../src/core"
+	"reardrive/src/core"
 	"github.com/kinone/sakura/mlog"
 	"log"
 	"os"
