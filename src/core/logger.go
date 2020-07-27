@@ -154,7 +154,7 @@ func NewLogFile(filename string) *logfile_t{
 				//fmt.Println("==========sync==========")
 			case <-timer.C:
 				self.rwm.Lock()
-				self.flush()
+				self.flushOnce()
 				self.rwm.Unlock()
 				//fmt.Println("==========async=========")
 			}
@@ -251,7 +251,7 @@ func (self *logfile_t) flushHalf() error {
 	return nil
 }
 
-func (self *logfile_t) flush() error {
+func (self *logfile_t) flushOnce() error {
 
 	file, err := self.openFile()
 	if err != nil {
@@ -267,6 +267,35 @@ func (self *logfile_t) flush() error {
 	}else {
 		_, err = file.Write(polled)
 	}
+
+	if err != nil {
+		panic(err)
+	}
+
+	return nil
+}
+
+func (self *logfile_t) flush() error {
+
+	file, err := self.openFile()
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	//fmt.Printf("Unused=>%d, %d\n",self.buf.Unused(), self.buf.Used())
+
+	//self.buf.Print()
+	for   {
+		polled := self.buf.Poll(self.buf.Used())
+		if polled == nil {
+			_, err = file.Write(self.buf.Poll(LOG_BUFFER_SIZE/2))
+		}else {
+			_, err = file.Write(polled)
+			break
+		}
+	}
+	//self.buf.Print()
 
 	if err != nil {
 		panic(err)

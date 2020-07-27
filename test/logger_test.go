@@ -23,6 +23,7 @@ import (
 		//fmt.Println("iiiiiiiiiii=>"+strconv.Itoa(i))
 	}
 
+	log.Close()
 
 	// output:
 	// test
@@ -33,7 +34,6 @@ import (
 
 func BenchmarkLogger1(b *testing.B) {
 	log := core.NewLogFile("../logs/error.log")
-	log.Close()
 
 	for i := 0; i < b.N; i++ {
 		fakeMessage := []byte("Test logging, but use a somewhat realistic message length.Test logging, but use a somewhat realistic message length")
