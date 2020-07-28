@@ -24,6 +24,8 @@ type logger_t struct {
 }
 
 type logfile_t struct {
+	file 			*os.File
+
 	filename 		string
 
 	flag 			int
@@ -39,6 +41,8 @@ type logfile_t struct {
 	fsync 			chan bool
 
 	fwait 			sync.WaitGroup
+
+	ticker 			*time.Ticker
 
 	thread_watcher 	func()
 }
@@ -164,14 +168,22 @@ func NewLogFile(filename string) *logfile_t{
 	self := &logfile_t{
 		filename : filename,
 		flag : os.O_CREATE | os.O_WRONLY | os.O_APPEND,
-		mode : 0666,
+		mode : 0644,
 		buf : NewBipBuffer(LOG_BUFFER_SIZE),
 		fsync: make(chan bool),
 	}
 
+	var err error
+	if nil == self.file {
+		self.file, err = self.openFile()
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	self.fwait.Add(1)
 
-	timer := time.NewTicker(time.Second * 3)
+	self.ticker = time.NewTicker(time.Second * 3)
 
 	self.thread_watcher = func() {
 		for {
@@ -182,7 +194,7 @@ func NewLogFile(filename string) *logfile_t{
 				//self.rwm.Unlock()
 				self.fwait.Done()
 				//fmt.Println("==========sync==========")
-			case <-timer.C:
+			case <-self.ticker.C:
 				self.rwm.Lock()
 				self.flushOnce()
 				self.rwm.Unlock()
@@ -197,7 +209,15 @@ func NewLogFile(filename string) *logfile_t{
 }
 
 func (self *logfile_t) Close() {
+	self.ticker.Stop()
+
+	self.rwm.Lock()
 	self.flush()
+	self.rwm.Unlock()
+
+	if nil != self.file {
+		_ = self.file.Close()
+	}
 }
 
 func (self *logfile_t) Write(message []byte) error {
@@ -262,16 +282,16 @@ func (self *logfile_t) waitSyncOnce() {
 }
 
 func (self *logfile_t) flushHalf() error {
-
-	file, err := self.openFile()
+	var err error
+	/*file, err := self.openFile()
 	if err != nil {
 		panic(err)
 	}
-	defer file.Close()
+	defer file.Close()*/
 
 	//fmt.Printf("Unused=>%d, %d\n",self.buf.Unused(), self.buf.Used())
 	if self.buf.Used() == LOG_BUFFER_SIZE  {
-		_, err = file.Write(self.buf.Poll(LOG_BUFFER_SIZE/2))
+		_, err = self.file.Write(self.buf.Poll(LOG_BUFFER_SIZE/2))
 	}
 
 	if err != nil {
@@ -282,20 +302,20 @@ func (self *logfile_t) flushHalf() error {
 }
 
 func (self *logfile_t) flushOnce() error {
-
-	file, err := self.openFile()
+	var err error
+	/*file, err := self.openFile()
 	if err != nil {
 		panic(err)
 	}
-	defer file.Close()
+	defer file.Close()*/
 
 	//fmt.Printf("Unused=>%d, %d\n",self.buf.Unused(), self.buf.Used())
 
 	polled := self.buf.Poll(self.buf.Used())
 	if polled == nil {
-		_, err = file.Write(self.buf.Poll(LOG_BUFFER_SIZE/2))
+		_, err = self.file.Write(self.buf.Poll(LOG_BUFFER_SIZE/2))
 	}else {
-		_, err = file.Write(polled)
+		_, err = self.file.Write(polled)
 	}
 
 	if err != nil {
@@ -306,12 +326,12 @@ func (self *logfile_t) flushOnce() error {
 }
 
 func (self *logfile_t) flush() error {
-
-	file, err := self.openFile()
+	var err error
+	/*file, err := self.openFile()
 	if err != nil {
 		panic(err)
 	}
-	defer file.Close()
+	defer file.Close()*/
 
 	//fmt.Printf("Unused=>%d, %d\n",self.buf.Unused(), self.buf.Used())
 
@@ -319,9 +339,9 @@ func (self *logfile_t) flush() error {
 	for   {
 		polled := self.buf.Poll(self.buf.Used())
 		if polled == nil {
-			_, err = file.Write(self.buf.Poll(LOG_BUFFER_SIZE/2))
+			_, err = self.file.Write(self.buf.Poll(LOG_BUFFER_SIZE/2))
 		}else {
-			_, err = file.Write(polled)
+			_, err = self.file.Write(polled)
 			break
 		}
 	}

@@ -44,7 +44,7 @@ func BenchmarkLogger1(b *testing.B) {
 
 	}
 
-	log.Close()
+	defer log.Close()
 }
 
 func BenchmarkLogger2(b *testing.B) {
@@ -56,7 +56,7 @@ func BenchmarkLogger2(b *testing.B) {
 		log.Info(fakeMessage + strconv.Itoa(i))
 	}
 
-	log.Close()
+	defer log.Close()
 }
 
 func BenchmarkStdLogger1(b *testing.B) {
