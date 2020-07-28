@@ -1,10 +1,12 @@
 package main
 
 import (
-	"reardrive/src/core"
 	"github.com/kinone/sakura/mlog"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"log"
 	"os"
+	"reardrive/src/core"
 	"strconv"
 	"testing"
 )
@@ -60,7 +62,7 @@ func BenchmarkLogger2(b *testing.B) {
 }
 
 func BenchmarkStdLogger1(b *testing.B) {
-	logFile, _ := os.OpenFile("../logs/error.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	logFile, _ := os.OpenFile("../logs/error.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 
 	log.SetOutput(logFile)
 
@@ -77,6 +79,25 @@ func BenchmarkMlog1(b *testing.B) {
 		File : "../logs/error.log",
 		Levels: []string{"info+"},
 	})
+
+	fakeMessage := "Test logging, but use a somewhat realistic message length.Test logging, but use a somewhat realistic message length."
+
+	for i:=0; i < b.N; i++ {
+		logger.Info(fakeMessage + strconv.Itoa(i))
+	}
+}
+
+func BenchmarkZap1(b *testing.B) {
+	file, _ := os.OpenFile("../logs/error.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	encoder := zap.NewProductionEncoderConfig()
+	encoder.EncodeTime = zapcore.ISO8601TimeEncoder
+	encoder.EncodeLevel = zapcore.CapitalLevelEncoder
+	core := zapcore.NewCore(
+		zapcore.NewConsoleEncoder(encoder),
+		zapcore.AddSync(file),
+		zapcore.DebugLevel,
+		)
+	logger:= zap.New(core)
 
 	fakeMessage := "Test logging, but use a somewhat realistic message length.Test logging, but use a somewhat realistic message length."
 

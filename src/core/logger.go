@@ -90,7 +90,7 @@ func (self *logger_t) record(levelStr []byte, s string) {
 	var file string
 	var line int
 	var ok bool
-	_, file, _, ok = runtime.Caller(2)
+	_, file, line, ok = runtime.Caller(2)
 	if !ok {
 		file = "???"
 		line = 0
