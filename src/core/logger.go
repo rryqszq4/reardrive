@@ -65,7 +65,7 @@ var (
 	}
 )
 
-const LOG_BUFFER_SIZE = 1024 * 32
+const LOG_BUFFER_SIZE = 1024 * 16
 const LOG_DELIMITER = ' '
 const LOG_END = '\n'
 
@@ -235,6 +235,7 @@ func (self *logfile_t) Write(message []byte) error {
 		self.buf.Offer(message[0:unused])
 
 		var tmp uint32
+		i := 0
 		for  {
 			//self.waitSyncOnce()
 
@@ -243,6 +244,11 @@ func (self *logfile_t) Write(message []byte) error {
 			tmp = self.buf.Offer(message[unused:])
 
 			if tmp > 0 {
+				break
+			}
+			i++
+			if i > 100 {
+				fmt.Println("write failed, buffer is small.")
 				break
 			}
 		}
