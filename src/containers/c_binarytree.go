@@ -275,3 +275,82 @@ func (self *CBinaryTree) PostorderPrint(node *CBinaryTreeNode) {
 
 	return
 }
+
+func (self *CBinaryTree) PreorderTraversal(root *CBinaryTreeNode) []interface{} {
+	if root == nil {
+		return nil
+	}
+
+	result := make([]interface{},0)
+	stack := make([]*CBinaryTreeNode, 0)
+
+	for root != nil || len(stack) != 0  {
+		for root != nil {
+			result = append(result, root.value)
+			stack = append(stack, root)
+			root = root.left
+		}
+
+		node := stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+		root = node.right
+	}
+
+	return result
+}
+
+func (self *CBinaryTree) InorderTraversal(root *CBinaryTreeNode) []interface{} {
+	result := make([]interface{}, 0)
+
+	if root == nil {
+		return result
+	}
+
+	stack := make([]*CBinaryTreeNode, 0)
+
+	for len(stack) != 0 || root != nil {
+		for root != nil {
+			stack = append(stack, root)
+			root = root.left
+		}
+
+		node := stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+		result = append(result, node.value)
+		root = node.right
+	}
+
+	return result
+}
+
+func (self *CBinaryTree) PostorderTraversal(root *CBinaryTreeNode) []interface{} {
+	if root == nil {
+		return nil
+	}
+
+	result := make([]interface{}, 0)
+	stack := make([]*CBinaryTreeNode, 0)
+
+	var lastVisitor *CBinaryTreeNode
+	for root != nil || len(stack) != 0 {
+		for root != nil {
+			stack = append(stack, root)
+			root = root.left
+		}
+
+		node := stack[len(stack)-1]
+
+		if node.right == nil || node.right == lastVisitor {
+			stack = stack[:len(stack)-1]
+			result = append(result, node.value)
+			lastVisitor = node
+		} else {
+			root = node.right
+		}
+	}
+
+	return result
+}
+
+
+

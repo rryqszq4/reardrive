@@ -46,6 +46,15 @@ func ExampleTestOne() {
 
 	binaryTree.PostorderPrint(binaryTree.Root())
 
+	result := binaryTree.PreorderTraversal(binaryTree.Root())
+	fmt.Println(result)
+
+	result = binaryTree.InorderTraversal(binaryTree.Root())
+	fmt.Println(result)
+
+	result = binaryTree.PostorderTraversal(binaryTree.Root())
+	fmt.Println(result)
+
 	// output:
 	//
 }
