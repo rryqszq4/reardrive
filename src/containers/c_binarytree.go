@@ -352,5 +352,18 @@ func (self *CBinaryTree) PostorderTraversal(root *CBinaryTreeNode) []interface{}
 	return result
 }
 
+func (self *CBinaryTree) MaxDepth(root *CBinaryTreeNode) int {
+	if root == nil {
+		return 0
+	}
 
+	left := self.MaxDepth(root.left)
+	right := self.MaxDepth(root.right)
+
+	if left > right {
+		return left + 1
+	}
+
+	return right + 1
+}
 
