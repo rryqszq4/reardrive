@@ -5,7 +5,7 @@ import (
 	"reardrive/src/containers"
 )
 
-func ExampleTestOne() {
+func ExampleCBinaryTreeOne() {
 	var binaryTree *containers.CBinaryTree
 
 	binaryTree = containers.NewCBinaryTree()
