@@ -1,8 +1,8 @@
 package core
 
 import (
-	"gopkg.in/yaml.v2"
 	"reardrive/conf_struct"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 )
 
@@ -16,16 +16,16 @@ type Conf struct {
 	Opt conf_struct.CoreConf
 }
 
-func (self *Conf) Init_module() {
+func (self *Conf) Init_module(cycle *Cycle) {
 	self.Name = "Conf"
-	self.FileName = "./conf/dev.yaml"
+	self.FileName = cycle.fileconf
 	self.Opt = conf_struct.CoreConf{}
 	buffer , err := ioutil.ReadFile(self.FileName)
 	err = yaml.Unmarshal(buffer, &self.Opt)
 	if err != nil {
 		GetLogger().Error(err)
 	}
-	GetLogger().Infof("%v\n", self.Opt)
+	GetLogger().Infof("%v", self.Opt)
 }
 
 func (self *Conf) Run_before_module() {}

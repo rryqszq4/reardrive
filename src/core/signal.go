@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -44,7 +45,7 @@ func (self *SignalT) run() {
 		GetLogger().Info("Signal run")
 		switch s {
 		case os.Interrupt, os.Kill, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT:
-			GetLogger().Info("Signal quit", s)
+			GetLogger().Info("Signal quit ", s)
 			if self.QuitHandle != nil {
 				self.QuitHandle()
 			}
@@ -53,11 +54,14 @@ func (self *SignalT) run() {
 			//self.SIGUSR1Handle()
 		case syscall.SIGUSR2:
 			GetLogger().Info("usr2", s)
-			//self.SIGUSR2Handle()
+			if self.SIGUSR2Handle != nil {
+				self.SIGUSR2Handle()
+			}
 		default:
 			GetLogger().Info("other", s)
 			//self.UnknowHandle()
 		}
+		fmt.Println("quited")
 		os.Exit(0)
 	}
 }

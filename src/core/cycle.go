@@ -1,10 +1,25 @@
 package core
 
 import (
+	"fmt"
 	"reflect"
+	"sync"
+	"time"
+)
+
+const (
+	DeveEnv string = "deve"
+	ProdEnv string = "prod"
+	TestEnv string = "test"
 )
 
 type Cycle struct {
+	env string
+
+	injector *injector
+
+	moduleArr []interface{}
+
 	enableSignal bool
 
 	structs []interface{}
@@ -15,21 +30,28 @@ type Cycle struct {
 
 	module map[string]*ModuleFrame
 
+	fileconf string
+
+	filelog string
+
+	filepid string
+
 	logger Logger
 
 	recorder Logger
+
+	cycleLock sync.Mutex
 }
 
 var cycleInstance *Cycle
 
-func CycleInstance(ms []string, st []interface{}, mst map[string]reflect.Type, m map[string]*ModuleFrame) *Cycle {
+func CycleInstance(st []interface{}) *Cycle {
 	if cycleInstance == nil {
 		cycleInstance = &Cycle{
+			env:DeveEnv,
+			injector:NewInjector(),
 			enableSignal:true,
-			moduleString:ms,
 			structs:st,
-			moduleStruct:mst,
-			module:m,
 		}
 	}
 	return cycleInstance
@@ -63,23 +85,37 @@ func GetRecorder() Logger{
 	return cycleInstance.recorder
 }
 
-func (self *Cycle) Cycle() {
+func GetInjectModule(v interface{}) interface{} {
+	return cycleInstance.injector.Get(reflect.TypeOf(v)).Elem().Interface().(ModuleFrame).Object
+}
+
+func (self *Cycle) Cycle() *Cycle {
 	self.init()
 
 	self.run()
 
 	self.signal()
+
+	return self
+}
+
+func (self *Cycle) SetEnv(env string) *Cycle {
+	self.env = env
+	return self
 }
 
 func (self *Cycle)signal() {
 	if self.enableSignal {
-		s:=&SignalT{QuitHandle:self.quit}
+		s:=&SignalT{
+			QuitHandle:self.quit,
+			SIGUSR2Handle:self.restart,
+		}
 		s.Create()
 	}
 }
 
 func (self *Cycle) bindLog() {
-	self.logger = NewLoggerAdapter("./logs/error.log", DEBUG)
+	self.logger = NewLoggerAdapter(self.filelog, DEBUG)
 	//self.logger = NewLoggerAdapter("./logs/error.log", "debug+")
 
 	self.logger.Info("Log bind over")
@@ -93,59 +129,79 @@ func (self *Cycle) bindRecordLog() {
 
 func (self *Cycle) init() {
 
+	get_options(self)
+
 	self.bindLog()
 
 	self.bindRecordLog()
 
-	/*self.structs = [] interface{} {
-		Startup{},
-		Bootstrap{},
-		Conf{},
-		consume.MultiPortrait{},
-	}*/
-
 	self.logger.Info("Cycle init start")
 
-	self.moduleStruct = make(map[string]reflect.Type)
-
-	for _, v := range self.structs {
-		moduleStr := reflect.TypeOf(v).String()
-		if ArrayIndex(moduleStr, self.moduleString) > -1 {
-			self.moduleStruct[moduleStr] = reflect.TypeOf(v)
+	for _, v :=range self.structs {
+		//fmt.Println(self.injector.Get(reflect.TypeOf(v)).Elem())
+		m := &ModuleFrame{
+			Object:   reflect.New(reflect.TypeOf(v)).Interface(),
 		}
+		m.Init_module(self)
+		self.injector.Set(reflect.TypeOf(v), reflect.ValueOf(m))
+
+		self.moduleArr = append(self.moduleArr, v)
 	}
 
-	self.module = make(map[string]*ModuleFrame)
-	for _, v := range self.moduleString {
-		obj := reflect.New(self.moduleStruct[v]).Interface()
-		self.module[v] = &ModuleFrame{
-			Object:   obj,
-		}
-		self.module[v].Init_module()
-	}
 }
 
 func (self *Cycle) run() {
 	self.logger.Info("Cycle run start")
-	for _, v:= range self.moduleString {
-		self.module[v].Run_before_module()
-		self.module[v].Run_module()
-		self.module[v].Run_after_module()
+
+	for _, v:=range self.structs {
+		if self.injector.Get(reflect.TypeOf(v)).Type() == reflect.TypeOf(&ModuleFrame{}) {
+
+			m := self.injector.Get(reflect.TypeOf(v)).Elem().Interface().(ModuleFrame)
+			m.Run_before_module()
+			m.Run_module()
+			m.Run_after_module()
+		}
 	}
+
 }
 
 func (self *Cycle) quit() {
+	self.cycleLock.Lock()
+	defer self.cycleLock.Unlock()
+
+	go func (delay time.Duration) {
+		for {
+			for _,r :=range `-\|/` {
+				fmt.Printf("\r%c", r)
+				time.Sleep(delay)
+			}
+		}
+	}(100 * time.Millisecond)
+
 	self.logger.Info("Cycle quit start")
 
 	// 这里需要清空HotConfig的notifyer，否则会发生死锁
-	GetHotConfig().ClearObserver()
+	GetInjectModule(HotConfig{}).(*HotConfig).ClearObserver()
 
-	_arr := ArrayStringRevers(self.moduleString)
+	_arr := ArrayRevers(self.moduleArr)
 
 	for _, v := range _arr {
-		self.module[v].Close_module()
+		m := self.injector.Get(reflect.TypeOf(v)).Elem().Interface().(ModuleFrame)
+		m.Close_module()
+	}
+
+	self.moduleArr = append([]interface{}{})
+
+	for _, v := range self.structs {
+		delete(self.injector.values, reflect.TypeOf(v))
 	}
 
 	self.logger.Close()
+}
+
+func (self *Cycle) restart() {
+	self.quit()
+
+	self.Cycle()
 }
 

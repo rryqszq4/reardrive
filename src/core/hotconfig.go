@@ -11,7 +11,7 @@ import (
 const (
 	Default = 0
 	Yaml	= 1
-	Ini		= 2
+	Ini 	= 2
 	Json	= 3
 )
 
@@ -32,36 +32,86 @@ type HotConfig struct {
 	notifyList []HotConfNotifyer
 }
 
-func (self *HotConfig) Init_module() {
-	self.load()
+/*
+====================
+Init_module
+====================
+*/
+func (self *HotConfig) Init_module(cycle *Cycle) {
+	self.load(cycle)
 }
 
+/*
+====================
+Run_before_module
+====================
+*/
 func (self *HotConfig) Run_before_module() {}
 
+/*
+====================
+Run_module
+====================
+*/
 func (self *HotConfig) Run_module() {
+	GetLogger().Info("hotconfig start")
 	self.thread.Start()
 }
 
+/*
+====================
+Run_after_module
+====================
+*/
 func (self *HotConfig) Run_after_module() {}
 
+/*
+====================
+Close_module
+====================
+*/
 func (self *HotConfig) Close_module() {
+	GetLogger().Info("hotconfig close")
 	self.thread.Stop()
+	self.thread.Close()
 }
 
+/*
+====================
+AddObserver
+	添加通知的对象
+====================
+*/
 func (self *HotConfig) AddObserver(n HotConfNotifyer) {
 	self.notifyList = append(self.notifyList, n)
 }
 
+/*
+====================
+AddObserver
+	清空通知列表
+====================
+*/
 func (self *HotConfig) ClearObserver() {
 	self.notifyList = self.notifyList[0:0]
 }
 
+/*
+====================
+GetData
+====================
+*/
 func (self *HotConfig) GetData() map[interface{}]interface{}{
 	self.rwLock.RLock()
 	defer self.rwLock.RUnlock()
 	return self.data
 }
 
+/*
+====================
+GetInt
+====================
+*/
 func (self *HotConfig) GetInt(key string) (value int) {
 	self.rwLock.RLock()
 	defer self.rwLock.RUnlock()
@@ -69,6 +119,11 @@ func (self *HotConfig) GetInt(key string) (value int) {
 	return self.data[key].(int)
 }
 
+/*
+====================
+GetBool
+====================
+*/
 func (self *HotConfig) GetBool(key string) (value bool) {
 	self.rwLock.RLock()
 	defer self.rwLock.RUnlock()
@@ -76,6 +131,11 @@ func (self *HotConfig) GetBool(key string) (value bool) {
 	return self.data[key].(bool)
 }
 
+/*
+====================
+GetString
+====================
+*/
 func (self *HotConfig) GetString(key string) (value string) {
 	self.rwLock.RLock()
 	defer self.rwLock.RUnlock()
@@ -83,6 +143,11 @@ func (self *HotConfig) GetString(key string) (value string) {
 	return self.data[key].(string)
 }
 
+/*
+====================
+GetMap
+====================
+*/
 func (self *HotConfig) GetMap(key string) (value map[interface{}]interface{}) {
 	self.rwLock.RLock()
 	defer self.rwLock.RUnlock()
@@ -90,6 +155,11 @@ func (self *HotConfig) GetMap(key string) (value map[interface{}]interface{}) {
 	return self.data[key].(map[interface{}]interface{})
 }
 
+/*
+====================
+GetList
+====================
+*/
 func (self *HotConfig) GetList(key string) (value []interface{}) {
 	self.rwLock.RLock()
 	defer self.rwLock.RUnlock()
@@ -97,15 +167,21 @@ func (self *HotConfig) GetList(key string) (value []interface{}) {
 	return self.data[key].([]interface{})
 }
 
-func (self *HotConfig) load() {
+/*
+====================
+load
+	载入配置文件
+====================
+*/
+func (self *HotConfig) load(cycle *Cycle) {
 	self.Name = "HotConfig"
-	self.filename = "./conf/dev.yaml"
+	self.filename = cycle.fileconf
 	self.filetype = Yaml
 
 	self.data = make(map[interface{}]interface{})
 	buffer, err := ioutil.ReadFile(self.filename)
 	if err != nil {
-		//todo
+		GetLogger().Error(err)
 		return
 	}
 
@@ -114,12 +190,21 @@ func (self *HotConfig) load() {
 	self.lastModifyTime, err = self.modTime()
 	self.rwLock.Unlock()
 
+	GetLogger().Info(self.data)
+
 	self.thread.Routine = self.reload
-	go self.thread.Create()
+	self.thread.Create()
+	go self.thread.Join()
 	return
 
 }
 
+/*
+====================
+reload
+	重新载入配置文件
+====================
+*/
 func (self *HotConfig) reload() {
 	// Timer
 	time.Sleep(time.Second * 5)
@@ -151,6 +236,12 @@ func (self *HotConfig) reload() {
 	}
 }
 
+/*
+====================
+modTime
+	文件修改时间
+====================
+*/
 func (self *HotConfig) modTime() (int64, error) {
 	f, err := os.Open(self.filename)
 	if err != nil {

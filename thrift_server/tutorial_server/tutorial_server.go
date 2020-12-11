@@ -1,9 +1,9 @@
 package tutorial_server
 
 import (
-	"code.sohuno.com/apollo/msgback/core"
-	"code.sohuno.com/apollo/msgback/core/modules"
-	"code.sohuno.com/apollo/msgback/thrift_server/tutorial"
+	"reardrive/core"
+	"reardrive/core/modules"
+	"reardrive/thrift_server/library/tutorial"
 	"github.com/apache/thrift/lib/go/thrift"
 )
 
@@ -19,7 +19,7 @@ func (self *TutorialServer) Run_before_module() {
 
 func (self *TutorialServer) init() {
 
-	_thrift := core.GetHotConfig().GetMap("thrift_server")
+	_thrift := core.GetInjectModule(core.HotConfig{}).(*core.HotConfig).GetMap("thrift_server")
 
 	_addr := _thrift["addr"]
 	self.Addr = _addr.(string)

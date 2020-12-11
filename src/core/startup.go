@@ -19,11 +19,12 @@ func NewStartup() ModuleImpl {
 	return &Startup{}
 }
 
-func (self *Startup) Init_module() {
+func (self *Startup) Init_module(cycle *Cycle) {
+
 	GetLogger().Info("startup init")
 	var err error
 	pid := os.Getpid()
-	self.pidFileName = "./pid"
+	self.pidFileName = cycle.filepid
 
 	GetLogger().Infof("Processing PID: %d", pid)
 

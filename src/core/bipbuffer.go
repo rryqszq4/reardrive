@@ -48,10 +48,8 @@ func (self *bipbuf_t) Unused() uint32 {
 /*
 ====================
 NewBipBuffer
-
-
 ====================
- */
+*/
 func NewBipBuffer(size uint32) *bipbuf_t {
 	return &bipbuf_t{
 		size:size,
@@ -75,10 +73,8 @@ func (self *bipbuf_t) free() {
 /*
 ====================
 Size
-
-
 ====================
- */
+*/
 func (self *bipbuf_t) Size() uint32{
 	return self.size
 }
@@ -86,10 +82,8 @@ func (self *bipbuf_t) Size() uint32{
 /*
 ====================
 Offer
-
-
 ====================
- */
+*/
 func (self *bipbuf_t) Offer(data []byte) uint32{
 	var size = uint32(len(data))
 
@@ -99,15 +93,15 @@ func (self *bipbuf_t) Offer(data []byte) uint32{
 
 	if self.b_inuse {
 		self.data = append(
-				append(self.data[0:self.b_end], data...),
-				self.data[self.b_end+size:]...
-			)
+			append(self.data[0:self.b_end], data...),
+			self.data[self.b_end+size:]...
+		)
 		self.b_end += uint32(size)
 	}else {
 		self.data = append(
-				append(self.data[0:self.a_end], data...),
-				self.data[self.a_end+size:]...
-			)
+			append(self.data[0:self.a_end], data...),
+			self.data[self.a_end+size:]...
+		)
 		self.a_end += uint32(size)
 	}
 
@@ -119,10 +113,8 @@ func (self *bipbuf_t) Offer(data []byte) uint32{
 /*
 ====================
 Peek
-
-
 ====================
- */
+*/
 func (self *bipbuf_t) Peek(size uint32) []byte{
 	if self.size < self.a_start + size {
 		return nil
@@ -138,10 +130,8 @@ func (self *bipbuf_t) Peek(size uint32) []byte{
 /*
 ====================
 Poll
-
-
 ====================
- */
+*/
 func (self *bipbuf_t) Poll(size uint32) []byte {
 	if self.IsEmpty() {
 		return nil
@@ -175,10 +165,8 @@ func (self *bipbuf_t) Poll(size uint32) []byte {
 /*
 ====================
 IsEmpty
-
-
 ====================
- */
+*/
 func (self *bipbuf_t) IsEmpty() bool {
 	return self.a_start >= self.a_end
 }
@@ -186,10 +174,8 @@ func (self *bipbuf_t) IsEmpty() bool {
 /*
 ====================
 Print
-
-
 ====================
- */
+*/
 func (self *bipbuf_t) Print() {
 	fmt.Printf("data:[%s %s],len:%d,size:%d,a_start:%d,a_end:%d,b_end:%d,b_inuse:%v,Used:%d,Unused:%d\n",
 		string(self.data[0:0]),string(self.data[0:0]),len(self.data), self.size, self.a_start, self.a_end, self.b_end, self.b_inuse,

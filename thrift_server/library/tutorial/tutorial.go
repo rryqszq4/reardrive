@@ -11,7 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/apache/thrift/lib/go/thrift"
-	"reardrive/thrift_server/shared"
+	"reardrive/thrift_server/library/shared"
 
 )
 
@@ -542,10 +542,6 @@ func (p *CalculatorClient) Zip(ctx context.Context) (err error) {
 
 type CalculatorProcessor struct {
   *shared.SharedServiceProcessor
-}
-
-func (CalculatorProcessor) Process(ctx context.Context, in, out thrift.TProtocol) (bool, thrift.TException) {
-	panic("implement me")
 }
 
 func NewCalculatorProcessor(handler Calculator) *CalculatorProcessor {

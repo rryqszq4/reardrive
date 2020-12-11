@@ -2,7 +2,7 @@ package core
 
 type ModuleImpl interface {
 
-	Init_module()
+	Init_module(cycle *Cycle)
 	Run_before_module()
 	Run_module()
 	Run_after_module()
@@ -18,12 +18,12 @@ type ModuleFrame struct {
 	Clear func()
 }
 
-func (self *ModuleFrame) Init_module() {
+func (self *ModuleFrame) Init_module(cycle *Cycle) {
 	switch true {
 	case self.Init != nil:
 		self.Init()
 	case self.Object != nil:
-		self.Object.(ModuleImpl).Init_module()
+		self.Object.(ModuleImpl).Init_module(cycle)
 	}
 }
 

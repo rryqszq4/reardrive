@@ -90,7 +90,7 @@ func (self *logger_t) record(levelStr []byte, s string) {
 	var file string
 	var line int
 	var ok bool
-	_, file, line, ok = runtime.Caller(2)
+	_, file, line, ok = runtime.Caller(3)
 	if !ok {
 		file = "???"
 		line = 0
@@ -105,61 +105,61 @@ func (self *logger_t) record(levelStr []byte, s string) {
 }
 
 func (self *logger_t) Trace(v ...interface{}) {
-	if self.level & TRACE > 0 {
+	if self.level <= TRACE {
 		self.record(levelStrings[TRACE],fmt.Sprint(v...))
 	}
 }
 
 func (self *logger_t) Tracef(format string, v ...interface{}) {
-	if self.level & TRACE > 0 {
+	if self.level <= TRACE {
 		self.record(levelStrings[TRACE], fmt.Sprintf(format, v...))
 	}
 }
 
 func (self *logger_t) Debug(v ...interface{}) {
-	if self.level & DEBUG > 0 {
+	if self.level <= DEBUG {
 		self.record(levelStrings[DEBUG],fmt.Sprint(v...))
 	}
 }
 
 func (self *logger_t) Debugf(format string, v ...interface{}) {
-	if self.level & DEBUG > 0 {
+	if self.level <= DEBUG {
 		self.record(levelStrings[DEBUG], fmt.Sprintf(format, v...))
 	}
 }
 
 func (self *logger_t) Info(v ...interface{}) {
-	if self.level & INFO > 0 {
+	if self.level <= INFO {
 		self.record(levelStrings[INFO],fmt.Sprint(v...))
 	}
 }
 
 func (self *logger_t) Infof(format string, v ...interface{}) {
-	if self.level & INFO > 0 {
+	if self.level <= INFO {
 		self.record(levelStrings[INFO], fmt.Sprintf(format, v...))
 	}
 }
 
 func (self *logger_t) Warn(v ...interface{}) {
-	if self.level & WARN > 0 {
+	if self.level <= WARN {
 		self.record(levelStrings[WARN],fmt.Sprint(v...))
 	}
 }
 
 func (self *logger_t) Warnf(format string, v ...interface{}) {
-	if self.level & WARN > 0 {
+	if self.level <= WARN {
 		self.record(levelStrings[WARN], fmt.Sprintf(format, v...))
 	}
 }
 
 func (self *logger_t) Error(v ...interface{}) {
-	if self.level & ERROR > 0 {
+	if self.level <= ERROR {
 		self.record(levelStrings[ERROR],fmt.Sprint(v...))
 	}
 }
 
 func (self *logger_t) Errorf(format string, v ...interface{}) {
-	if self.level & ERROR > 0 {
+	if self.level <= ERROR {
 		self.record(levelStrings[ERROR], fmt.Sprintf(format, v...))
 	}
 }
@@ -183,7 +183,7 @@ func NewLogFile(filename string) *logfile_t{
 
 	self.fwait.Add(1)
 
-	self.ticker = time.NewTicker(time.Second * 3)
+	self.ticker = time.NewTicker(time.Second * 1)
 
 	self.thread_watcher = func() {
 		for {
@@ -356,6 +356,7 @@ func (self *logfile_t) flush() error {
 	if err != nil {
 		panic(err)
 	}
+	self.file.Sync()
 
 	return nil
 }

@@ -22,9 +22,9 @@ package tutorial_server
 import (
 	"context"
 	"fmt"
-	"code.sohuno.com/apollo/msgback/thrift_server/shared"
+	"reardrive/thrift_server/library/shared"
 	"strconv"
-	"code.sohuno.com/apollo/msgback/thrift_server/tutorial"
+	"reardrive/thrift_server/library/tutorial"
 )
 
 type CalculatorHandler struct {
